@@ -1,3 +1,4 @@
+#ifndef __riscv
 #include "Tinn.h"
 #include "helper.h"
 #include <time.h>
@@ -47,3 +48,4 @@ int main()
     dfree(data);
     return 0;
 }
+#endif
