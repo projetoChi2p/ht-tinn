@@ -1,3 +1,4 @@
+#include "predict.h"
 #include "Tinn.h"
 
 #ifndef PREDICT_ATOF
