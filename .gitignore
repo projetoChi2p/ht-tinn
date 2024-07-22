@@ -4,3 +4,6 @@
 *.d
 test
 *.tinn
+*.exe
+train
+predict

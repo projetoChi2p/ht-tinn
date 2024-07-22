@@ -1,4 +1,5 @@
-BIN = test
+TRAIN = train
+PREDICT = predict
 
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -Ofast -flto -march=native
 
@@ -6,13 +7,19 @@ LDFLAGS = -lm
 
 CC = gcc
 
-SRC = test.c Tinn.c
+TINN_SRC = Tinn.c
 
-all:
-	$(CC) -o $(BIN) $(SRC) $(CFLAGS) $(LDFLAGS)
+TRAIN_SRC = train.c helper.c
 
-run:
-	./$(BIN)
+PREDICT_SRC = predict.c helper.c
+
+all: train predict
+
+train: $(TINN_SRC) $(TRAIN_SRC)
+	$(CC) -o $(TRAIN) $(TINN_SRC) $(TRAIN_SRC) $(CFLAGS) $(LDFLAGS)
+
+predict: $(TINN_SRC) $(PREDICT_SRC)
+	$(CC) -o $(PREDICT) $(TINN_SRC) $(PREDICT_SRC) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	rm -f $(BIN)
+	rm -f $(TRAIN) $(PREDICT)
