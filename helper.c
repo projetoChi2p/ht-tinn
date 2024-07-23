@@ -1,3 +1,4 @@
+#ifndef __riscv
 #include "helper.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -121,3 +122,4 @@ Data build(const char* path, const int nips, const int nops)
     fclose(file);
     return data;
 }
+#endif

@@ -1,5 +1,5 @@
 #pragma once
-
+#ifndef __riscv
 // Data object.
 typedef struct
 {
@@ -24,3 +24,4 @@ void dfree(const Data d);
 
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
 Data build(const char* path, const int nips, const int nops);
+#endif
