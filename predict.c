@@ -23,10 +23,6 @@
 #define PREDICT_MALLOC(n) pvPortMalloc(n)
 #endif
 
-#ifndef PREDICT_REALLOC
-#define PREDICT_REALLOC(n, s) pvPortRealloc(n, s)
-#endif
-
 #ifndef PREDICT_PRINT
 #include "printf.h"
 #define PREDICT_PRINT printf
@@ -50,7 +46,7 @@
 
 #ifndef PREDICT_REWIND
 #include <stdio.h>
-#define PREDICT_REWIND FF_rewind
+#define PREDICT_REWIND ff_rewind
 #endif
 
 #else
@@ -71,11 +67,6 @@
 #ifndef PREDICT_MALLOC
 #include <stdio.h>
 #define PREDICT_MALLOC(n) malloc(n)
-#endif
-
-#ifndef PREDICT_REALLOC
-#include <stdio.h>
-#define PREDICT_REALLOC(n, s) realloc(n, s)
 #endif
 
 #ifndef PREDICT_PRINT
@@ -117,6 +108,7 @@ static int lns(PREDICT_FILE *const file)
     int ch = EOF;
     int lines = 0;
     int pc = '\n';
+    PREDICT_PRINT("Counting lines\n");
     while ((ch = PREDICT_FGETC(file)) != EOF)
     {
         if (ch == '\n')
@@ -125,7 +117,9 @@ static int lns(PREDICT_FILE *const file)
     }
     if (pc != '\n')
         lines++;
+    PREDICT_PRINT("Rewinding file\n");
     PREDICT_REWIND(file);
+    PREDICT_PRINT("File rewound\n");
     return lines;
 }
 
@@ -135,12 +129,22 @@ static char *readln(PREDICT_FILE *const file)
     int ch = EOF;
     int reads = 0;
     int size = 128;
+    PREDICT_PRINT("Reading line\n");
     char *line = (char *)PREDICT_MALLOC((size) * sizeof(char));
     while ((ch = PREDICT_FGETC(file)) != '\n' && ch != EOF)
     {
         line[reads++] = ch;
-        if (reads + 1 == size)
-            line = (char *)PREDICT_REALLOC((line), (size *= 2) * sizeof(char));
+        if (reads + 1 == size){
+            int new_size = size * 2;
+            char *new_line = (char *)PREDICT_MALLOC(new_size * sizeof(char));
+            for (int i = 0; i < size; i++)
+            {
+                new_line[i] = line[i];
+            }
+            PREDICT_FREE(line);
+            line = new_line;
+            size = new_size;
+        }
     }
     line[reads] = '\0';
     return line;
@@ -168,26 +172,33 @@ static void parse(const Data data, char *line, const int nips, const int nops)
 
 Data load_row(const char *path, const int nips, const int nops)
 {
+    PREDICT_PRINT("Opening file\n");
     PREDICT_FILE *file = PREDICT_FOPEN(path, "r");
     if (file == NULL)
     {
         PREDICT_PRINT("Error: Could not open file %s\n", path);
         return (Data){NULL, NULL};
     }
+    PREDICT_PRINT("File opened\n");
     const int rows = lns(file);
+    PREDICT_PRINT("Rows counted: %d\n", rows);
     Data data = {
         (float *)PREDICT_MALLOC(nips * sizeof(float)),
         (float *)PREDICT_MALLOC(nops * sizeof(float))};
 
     const int row = PREDICT_RAND() % rows;
+    PREDICT_PRINT("Random row selected: %d\n", row);
     char *line;
     for (int i = 0; i < row; i++)
     {
         line = readln(file);
         PREDICT_FREE(line);
     }
+    PREDICT_PRINT("Reading line\n");
     line = readln(file);
+    PREDICT_PRINT("Line read\n");
     parse(data, line, nips, nops);
+    PREDICT_PRINT("Data parsed\n");
     PREDICT_FREE(line);
     PREDICT_FCLOSE(file);
     return data;
@@ -206,14 +217,19 @@ int predict(int seed)
     ; // Number of outputs to neural network.
     const int nips = 256;
     // Load the training set.
+    PREDICT_PRINT("Loading data\n");
     const Data data = load_row("semeion.data", nips, nops);
     const float *const in = data.in;
     const float *const tg = data.tg;
-    if (in == NULL || tg == NULL)
+    if (in == NULL || tg == NULL){
+        PREDICT_PRINT("Error: Could not load data\n");
         return 1;
+    }
 
     // This is how you load the neural network from disk.
+    PREDICT_PRINT("Loading neural network\n");
     const Tinn loaded = xtload("saved.tinn");
+    PREDICT_PRINT("Predicting\n");
     const float *const pd = xtpredict(loaded, in);
     // Prints target.
     xtprint(tg, nops);
