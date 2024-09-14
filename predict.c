@@ -204,6 +204,8 @@ Data load_row(const char *path, const int nips, const int nops)
     return data;
 }
 
+#include <stdint.h>
+
 int predict(int seed)
 {
     // Tinn does not seed the random number generator.
@@ -230,7 +232,17 @@ int predict(int seed)
     PREDICT_PRINT("Loading neural network\n");
     const Tinn loaded = xtload("saved.tinn");
     PREDICT_PRINT("Predicting\n");
+#ifdef FREERTOS
+    uint32_t start = xTaskGetTickCount();
+#else
+    uint32_t start = 0;
+#endif
     const float *const pd = xtpredict(loaded, in);
+#ifdef FREERTOS
+    uint32_t end = xTaskGetTickCount();
+#else
+    uint32_t end = 0;
+#endif
     // Prints target.
     xtprint(tg, nops);
     // Prints prediction.
@@ -239,7 +251,7 @@ int predict(int seed)
     xtfree(loaded);
     PREDICT_FREE(data.in);
     PREDICT_FREE(data.tg);
-    return 0;
+    return end - start;
 }
 
 #ifndef __riscv
