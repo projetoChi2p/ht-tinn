@@ -6,6 +6,11 @@
 #define PREDICT_ATOF(x) atof(x)
 #endif
 
+#ifndef PREDICT_ATOI
+#include <math.h>
+#define PREDICT_ATOI(x) atoi(x)
+#endif
+
 #ifdef FREERTOS
 #include <ff_headers.h>
 #include <ff_stdio.h>
@@ -129,7 +134,7 @@ static char *readln(PREDICT_FILE *const file)
     int ch = EOF;
     int reads = 0;
     int size = 128;
-    PREDICT_PRINT("Reading line\n");
+    //PREDICT_PRINT("Reading line\n");
     char *line = (char *)PREDICT_MALLOC((size) * sizeof(char));
     while ((ch = PREDICT_FGETC(file)) != '\n' && ch != EOF)
     {
@@ -155,10 +160,12 @@ typedef struct
     float *in;
     float *tg;
 } Data;
+#define MNIST
 
 // Gets one row of inputs and outputs from a string.
 static void parse(const Data data, char *line, const int nips, const int nops)
 {
+#ifndef MNIST
     const int cols = nips + nops;
     for (int col = 0; col < cols; col++)
     {
@@ -168,6 +175,19 @@ static void parse(const Data data, char *line, const int nips, const int nops)
         else
             data.tg[col - nips] = val;
     }
+#else
+    const int cols = nips + 1;
+    const int tgt = PREDICT_ATOI(strtok(line, ","));
+    for (int i = 0; i < nops; i++)
+    {
+        data.tg[i] = i == tgt ? 1.0f : 0.0f;
+    }
+    for (int col = 1; col < cols; col++)
+    {
+        const int val = PREDICT_ATOI(strtok(NULL, ","));
+        data.in[col - 1] = val / 255.0f;
+    }
+#endif
 }
 
 Data load_row(const char *path, const int nips, const int nops)
@@ -215,12 +235,19 @@ int predict(int seed)
     // but for the sake of brevity here we just reuse the training set from earlier.
     // One data set is picked at random (zero index of input and target arrays is enough
     // as they were both shuffled earlier).
+#ifndef MNIST
     const int nops = 10;
-    ; // Number of outputs to neural network.
+    // Number of outputs to neural network.
     const int nips = 256;
-    // Load the training set.
     PREDICT_PRINT("Loading data\n");
     const Data data = load_row("semeion.data", nips, nops);
+#else
+    const int nops = 10;
+    // Number of outputs to neural network.
+    const int nips = 784;
+    const Data data = load_row("mnist_test.csv", nips, nops);
+#endif
+    // Load the training set.
     const float *const in = data.in;
     const float *const tg = data.tg;
     if (in == NULL || tg == NULL){
@@ -230,7 +257,11 @@ int predict(int seed)
 
     // This is how you load the neural network from disk.
     PREDICT_PRINT("Loading neural network\n");
+#ifndef MNIST
     const Tinn loaded = xtload("saved.tinn");
+#else
+    const Tinn loaded = xtload("mnist.tinn");
+#endif
     PREDICT_PRINT("Predicting\n");
 #ifdef FREERTOS
     uint32_t start = xTaskGetTickCount();

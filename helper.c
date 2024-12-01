@@ -71,6 +71,21 @@ static void parse(const Data data, char* line, const int row)
     }
 }
 
+static void parse_mnist(const Data data, char* line, const int row)
+{
+    const int cols = data.nips + 1;
+    const int tgt = atoi(strtok(line, ","));
+    for (int i = 0; i < data.nops; i++)
+    {
+        data.tg[row][i] = i == tgt ? 1.0f : 0.0f;
+    }
+
+    for (int col = 1; col < cols; col++){
+        const int val = atoi(strtok(NULL, ","));
+        data.in[row][col] = val / 255.0f;
+    }
+}
+
 // Frees a data object from the heap.
 void dfree(const Data d)
 {
@@ -101,7 +116,7 @@ void shuffle(const Data d)
 }
 
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
-Data build(const char* path, const int nips, const int nops)
+Data build(const char* path, const int nips, const int nops, const int mnist)
 {
     FILE* file = fopen(path, "r");
     if(file == NULL)
@@ -109,14 +124,25 @@ Data build(const char* path, const int nips, const int nops)
         printf("Could not open %s\n", path);
         printf("Get it from the machine learning database: ");
         printf("wget http://archive.ics.uci.edu/ml/machine-learning-databases/semeion/semeion.data\n");
+        printf("Or from the MNIST database: ");
+        printf("https://www.kaggle.com/datasets/oddrationale/mnist-in-csv\n");
         exit(1);
     }
     const int rows = lns(file);
     Data data = ndata(nips, nops, rows);
+    if (mnist != 0){
+        // Skip the first line
+        char* line = readln(file);
+        (void) line;
+    }
     for(int row = 0; row < rows; row++)
     {
         char* line = readln(file);
-        parse(data, line, row);
+        if (mnist != 0){
+            parse_mnist(data, line, row);
+        } else {
+            parse(data, line, row);
+        }
         free(line);
     }
     fclose(file);

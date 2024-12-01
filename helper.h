@@ -23,5 +23,5 @@ void shuffle(const Data d);
 void dfree(const Data d);
 
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
-Data build(const char* path, const int nips, const int nops);
+Data build(const char* path, const int nips, const int nops, const int mnist);
 #endif
