@@ -46,32 +46,21 @@ int train(const int nips, const int nops, const int nhid, float learn_rate, cons
     return 0;
 }
 
-#define MNIST
 
 // Learns and predicts hand written digits with 98% accuracy.
-int main()
+int main(int argc, char **argv)
 {
+    int mnist = argc == 1 ? 0 : atoi(argv[1]);
+    printf("Training for: %s", mnist ? "MNIST\n" : "SEMEION\n");
     // Tinn does not seed the random number generator.
     srand(time(0));
-#ifndef MNIST
-    const int nips = 256;
+    // Hyper Parameters.
+    const int nips = mnist == 0 ? 256 : 784;
     const int nops = 10;
-
     float rate = 1.0f;
-    const int nhid = 28;
+    const int nhid = mnist == 0 ? 28 : 196;
     const float anneal = 0.99f;
     const int iterations = 128;
-    const int mnist = 0;
-#else
-    const int nips = 784;
-    const int nops = 10;
-
-    float rate = 1.0f;
-    const int nhid = 196;
-    const float anneal = 0.99f;
-    const int iterations = 128;
-    const int mnist = 1;
-#endif
     return train(nips, nops, nhid, rate, anneal, iterations, mnist);
 }
 #endif

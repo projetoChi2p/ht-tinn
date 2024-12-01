@@ -1,6 +1,8 @@
 #include "predict.h"
 #include "Tinn.h"
 
+#define MNIST
+
 #ifndef PREDICT_ATOF
 #include <math.h>
 #define PREDICT_ATOF(x) atof(x)
@@ -160,7 +162,6 @@ typedef struct
     float *in;
     float *tg;
 } Data;
-#define MNIST
 
 // Gets one row of inputs and outputs from a string.
 static void parse(const Data data, char *line, const int nips, const int nops)
