@@ -287,8 +287,22 @@ int predict(int seed)
 
 #ifndef __riscv
 #include <time.h>
-int main()
+int main(int argc, char **argv)
 {
-    return predict(time(0));
+    if (argc == 1)
+    {
+        return predict(time(0));
+    }
+    
+    int count = atoi(argv[1]);
+    for (int i = 0; i < count; i++)
+    {
+        if (predict(time(0)) != 0)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 #endif
