@@ -68,6 +68,12 @@ static float** new2d(const int rows, const int cols)
 // New data object.
 static Data ndata(const int nips, const int nops, const int rows)
 {
+    // 2D floating point array of input.
+    float** in = new2d(rows, nips);
+    printf("Made in\n");
+    // 2D floating point array of target.
+    float** tg = new2d(rows, nops);
+    printf("Made tg\n");
     const Data data = {
         new2d(rows, nips), new2d(rows, nops), nips, nops, rows
     };
@@ -152,7 +158,7 @@ Data build(const char* path, const int nips, const int nops, const int mnist)
         char* line = readln(file);
         (void) line;
     }
-    for(int row = 0; row < rows; row++)
+    for(int row = mnist == 0 ? 0 : 1; row < rows; row++)
     {
         char* line = readln(file);
         if (mnist != 0){
